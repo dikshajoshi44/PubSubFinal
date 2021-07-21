@@ -5,13 +5,16 @@ import com.dikshaJ.pubSub.PubSub.Service.*;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.sql.Timestamp;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.PriorityBlockingQueue;
 
 @SpringBootApplication
 public class PubSubApplication {
 
 	public static void main(String[] args) {
+		new Timestamp(System.currentTimeMillis());
 
 		PubSubService pubSubService = PubSubService.getInstance();
 
@@ -29,26 +32,37 @@ public class PubSubApplication {
 
 
 		ExecutorService pool = Executors.newFixedThreadPool(4);
-		pool.execute(() -> {
-			javaPub1.publish(javaMessage1);
-			System.out.println("current thread" + Thread.currentThread().getName());
-		});
-		pool.execute(() -> {
-			javaPub1.publish(javaMessage2);
-			System.out.println("current thread" + Thread.currentThread().getName());
-		});
-		pool.execute(() -> {
-			pyhtonPub2.publish(pythonMessage3);
-			System.out.println("current thread" + Thread.currentThread().getName());
-		});
 
-		pool.execute(() -> {
-			pyhtonPub2.publish(pythonMessage4);
-			System.out.println("current thread" + Thread.currentThread().getName());
-		});
+		for(int  i = 0; i < 5; i++){
+			int finalI = i;
+			pool.execute(() -> javaPub1.publish(new Message("java","Hi we are working on java " + finalI)));
+		}
+//		pool.execute(() -> {
+//			javaPub1.publish(javaMessage1);
+//			javaPub1.publish(javaMessage2);
+//			pyhtonPub2.publish(pythonMessage3);
+//			pyhtonPub2.publish(pythonMessage4);
+//		});
+//		pool.execute(() -> {
+//			javaPub1.publish(javaMessage2);
+//			System.out.println("current thread" + Thread.currentThread().getName());
+//		});
+//		pool.execute(() -> {
+//			pyhtonPub2.publish(pythonMessage3);
+//			System.out.println("current thread" + Thread.currentThread().getName());
+//		});
+//
+//		pool.execute(() -> {
+//			pyhtonPub2.publish(pythonMessage4);
+//			System.out.println("current thread" + Thread.currentThread().getName());
+//		});
 
 		pool.execute(() -> {
 			javaSub1.addSubscriber("java");
+			System.out.println("current thread" + Thread.currentThread().getName());
+		});
+		pool.execute(() -> {
+			javaSub2.addSubscriber("java");
 			System.out.println("current thread" + Thread.currentThread().getName());
 		});
 
@@ -84,14 +98,12 @@ public class PubSubApplication {
 
 		System.out.println("Messages of Java Subscriber are: ");
 		pool.execute(() -> javaSub1.printMessages());
+		pool.execute(() -> javaSub2.printMessages());
 
 		System.out.println("\nMessages of Python Subscriber are: ");
 		pool.execute(() -> pythonSub3.printMessages());
 
-		pool.shutdown();
-
-
-
+		//pool.shutdown();
 
 
 
